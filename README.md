@@ -57,10 +57,12 @@ Held-out test (dair-ai/emotion, 2,000 unseen rows): **macro-F1 0.866**, accuracy
 **0.91**, and distress-layer recall **1.00** (reported separately). Full per-class
 precision/recall and the confusion matrix are in [`reports/metrics.md`](reports/metrics.md).
 
-**📈 Interactive dashboard:** open [`dashboard.html`](dashboard.html) in any browser
-(self-contained, no server needed) for KPI cards, a per-class metric chart, model
-comparison, class distribution, and a confusion-matrix heatmap. A formatted report
-is also available as [`reports/report.tex`](reports/report.tex) (LaTeX → PDF).
+**📈 Interactive dashboard:** view it live at
+**[namansaini04.github.io/Supportive-text-classifier/dashboard.html](https://namansaini04.github.io/Supportive-text-classifier/dashboard.html)**
+(or open [`dashboard.html`](dashboard.html) locally — it's self-contained, no server
+needed). KPI cards, a per-class metric chart, model comparison, class distribution,
+and a confusion-matrix heatmap. A formatted report is also available as
+[`reports/report.tex`](reports/report.tex) (LaTeX → PDF).
 
 ## 🗂️ Project Structure
 
