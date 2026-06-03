@@ -81,6 +81,21 @@ the v2 upgrade. Full analysis in
 [`notebooks/02_dataset_comparison.ipynb`](notebooks/02_dataset_comparison.ipynb);
 the GoEmotions loader is preserved at `src/download_goemotions.py`.
 
+### Sentence embeddings (v2) — also tested, also lost
+
+I then tested whether dense **sentence embeddings** (all-MiniLM-L6-v2) would beat
+TF-IDF, with both a linear and a non-linear (MLP) head for a fair comparison.
+
+![embeddings vs TF-IDF](reports/embedding_comparison.png)
+
+TF-IDF + Logistic Regression **won on both datasets**. The MLP head narrowed the gap
+(it mattered to test it) but never closed it. Takeaways: (1) the task is lexically
+explicit, so bag-of-words is hard to beat; (2) on noisy data the bottleneck is the
+label scheme, not the features — a better representation can't fix a bad mapping;
+(3) the real follow-up is *fine-tuning* the transformer, not freezing it. Full
+analysis: [`notebooks/03_embedding_experiment.ipynb`](notebooks/03_embedding_experiment.ipynb).
+Code preserved in `src/embeddings.py` + `src/train_embeddings.py`.
+
 ## 🗂️ Project Structure
 
 ```
