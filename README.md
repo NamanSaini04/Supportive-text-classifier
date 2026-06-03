@@ -81,6 +81,18 @@ the v2 upgrade. Full analysis in
 [`notebooks/02_dataset_comparison.ipynb`](notebooks/02_dataset_comparison.ipynb);
 the GoEmotions loader is preserved at `src/download_goemotions.py`.
 
+**Acting on the diagnosis — fixing the label scheme.** If the oversized `neutral`
+grab-bag was the problem, fixing it should help. So I changed the remap to map only
+*true* neutral (id 27) and **drop** the 18 positive emotions instead of mislabelling
+them. This lifted GoEmotions held-out **macro-F1 from 0.409 → 0.493** (+0.08), with
+precision up across the board (anger 0.32→0.48, sadness 0.27→0.45) — confirming the
+bottleneck was the labels, not the features. It still trails dair-ai (the remaining
+gap is noisy Reddit text + data-starved `stress`/`loneliness`), but the fix is a
+real, measured win. Strict mapping is now the loader default (`--lenient-neutral`
+reproduces the old scheme).
+
+![GoEmotions label-scheme fix](reports/goemotions_fix.png)
+
 ### Sentence embeddings (v2) — also tested, also lost
 
 I then tested whether dense **sentence embeddings** (all-MiniLM-L6-v2) would beat
