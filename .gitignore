@@ -12,3 +12,7 @@ venv/
 
 # OS
 .DS_Store
+
+# Build artifacts (regenerable)
+reports/overleaf_report.zip
+reports/overleaf_report/
