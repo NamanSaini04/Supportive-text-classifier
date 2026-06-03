@@ -1,0 +1,14 @@
+# Data & models (often large or sensitive — keep out of git)
+data/raw/
+data/processed/*.csv
+models/*.joblib
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
