@@ -96,6 +96,22 @@ label scheme, not the features — a better representation can't fix a bad mappi
 analysis: [`notebooks/03_embedding_experiment.ipynb`](notebooks/03_embedding_experiment.ipynb).
 Code preserved in `src/embeddings.py` + `src/train_embeddings.py`.
 
+### Fine-tuning the transformer (v3) — this one won 🏆
+
+Frozen embeddings were the floor, not the ceiling. **Fine-tuning** the MiniLM
+backbone end-to-end (unfreezing its weights) reached **macro-F1 0.915** — beating
+TF-IDF by ~5 points and lifting every class, especially the previously-weak
+`stress` (0.78→0.86) and `loneliness` (0.84→0.91). ~53s on Apple MPS.
+
+![fine-tuning results](reports/finetune_comparison.png)
+
+**The honest trade-off:** the fine-tuned model is more accurate but ~90 MB and pulls
+in `torch` + `transformers` (vs ~1 MB for TF-IDF). For a lightweight, easily-deployed
+reflection aid, **TF-IDF remains the shipped default**; the fine-tuned model is the
+right call when accuracy outweighs footprint. Full analysis:
+[`notebooks/04_finetuning.ipynb`](notebooks/04_finetuning.ipynb); code in
+`src/train_finetune.py`.
+
 ## 🗂️ Project Structure
 
 ```

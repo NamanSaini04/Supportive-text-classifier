@@ -2,6 +2,7 @@
 data/raw/
 data/processed/*.csv
 models/*.joblib
+models/finetuned_minilm/
 
 # Python
 __pycache__/
