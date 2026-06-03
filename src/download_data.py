@@ -19,17 +19,16 @@ Usage:
     python -m src.download_data --max-per-class 2000   # cap for speed/balance
     python -m src.download_data --split validation
 """
-import argparse
 import sys
+from pathlib import Path
 
 import pandas as pd
 
 # Make project root importable when run as a script
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import DATA_PROCESSED, RANDOM_STATE, TONE_LABELS  # noqa: E402
 from data.label_map import DAIR_AI_TO_TONE, derive_loneliness, derive_stress  # noqa: E402
+from src.dataset_utils import run_cli  # noqa: E402
 
 # Parquet files served directly by the Hugging Face Hub (no auth needed)
 _BASE = "https://huggingface.co/datasets/dair-ai/emotion/resolve/main/split"
@@ -67,43 +66,5 @@ def remap_to_tones(df: pd.DataFrame) -> pd.DataFrame:
     return df[["text", "label"]]
 
 
-def balance(df: pd.DataFrame, max_per_class: int | None) -> pd.DataFrame:
-    """Optionally cap each class to reduce the heavy neutral imbalance."""
-    if not max_per_class:
-        return df
-    parts = [
-        g.sample(min(len(g), max_per_class), random_state=RANDOM_STATE)
-        for _, g in df.groupby("label")
-    ]
-    return pd.concat(parts).sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--split", default="train", choices=list(_FILES))
-    parser.add_argument("--max-per-class", type=int, default=None,
-                        help="cap samples per tone (helps imbalance + speed)")
-    parser.add_argument("--out", default=None, help="output CSV path")
-    args = parser.parse_args()
-
-    raw = fetch_split(args.split)
-    tones = remap_to_tones(raw)
-    tones = balance(tones, args.max_per_class)
-
-    print("\nClass distribution after remap:")
-    counts = tones["label"].value_counts().reindex(TONE_LABELS).fillna(0).astype(int)
-    print(counts.to_string())
-
-    missing = counts[counts == 0].index.tolist()
-    if missing:
-        print(f"\n  NOTE: no samples for {missing} — keyword derivation found none. "
-              "Loosen keywords in data/label_map.py or add data manually.")
-
-    out = Path(args.out) if args.out else DATA_PROCESSED / f"{args.split}.csv"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    tones.to_csv(out, index=False)
-    print(f"\nSaved {len(tones)} rows -> {out}")
-
-
 if __name__ == "__main__":
-    main()
+    run_cli(fetch_split, remap_to_tones, list(_FILES))
