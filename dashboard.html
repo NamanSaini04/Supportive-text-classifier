@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supportive Emotion & Distress Classifier — Project Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg-primary:#f6f8fa; --bg-card:#fff; --bg-header:#1f3a4d;
+  --text-primary:#1c2b36; --text-secondary:#6c7a86; --text-on-dark:#fff;
+  --accent:#2f6f8f; --positive:#28a745; --warn:#b23a2e;
+  --c-anger:#c44e52; --c-anxiety:#8172b3; --c-loneliness:#937860;
+  --c-neutral:#7f8c9b; --c-sadness:#4c72b0; --c-stress:#dd8452;
+  --gap:16px; --radius:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg-primary);color:var(--text-primary);line-height:1.5;}
+.dashboard-container{max-width:1320px;margin:0 auto;padding:var(--gap);}
+.dashboard-header{background:var(--bg-header);color:var(--text-on-dark);
+  padding:20px 26px;border-radius:var(--radius);margin-bottom:var(--gap);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+.dashboard-header h1{font-size:20px;font-weight:650;}
+.dashboard-header .sub{font-size:12.5px;color:rgba(255,255,255,.7);margin-top:3px;}
+.filters{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+.filter-group{display:flex;flex-direction:column;gap:3px;}
+.filter-group label{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;}
+.filter-group select{padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;
+  background:rgba(255,255,255,.12);color:#fff;font-size:13px;}
+.filter-group select option{background:var(--bg-header);color:#fff;}
+
+.disclaimer{background:#fff4f2;border:1px solid #f0c5bd;color:#8a2f24;
+  border-radius:var(--radius);padding:11px 16px;margin-bottom:var(--gap);font-size:13px;}
+.disclaimer b{color:var(--warn);}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.kpi-card{background:var(--bg-card);border-radius:var(--radius);padding:18px 22px;
+  box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid var(--accent);}
+.kpi-label{font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.kpi-value{font-size:30px;font-weight:750;}
+.kpi-sub{font-size:12px;color:var(--text-secondary);margin-top:3px;}
+.kpi-card.good{border-left-color:var(--positive);}
+.kpi-card.safety{border-left-color:var(--warn);}
+
+.chart-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.chart-container{background:var(--bg-card);border-radius:var(--radius);padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.chart-container h3{font-size:14px;font-weight:650;margin-bottom:4px;}
+.chart-container .hint{font-size:11.5px;color:var(--text-secondary);margin-bottom:14px;}
+.chart-container canvas{max-height:300px;}
+
+/* Confusion matrix heatmap */
+.cm-wrap{overflow-x:auto;}
+table.cm{border-collapse:collapse;font-size:12px;margin-top:6px;}
+table.cm th{padding:6px 8px;color:var(--text-secondary);font-weight:600;font-size:11px;}
+table.cm th.rot{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;}
+table.cm td.lbl{color:var(--text-secondary);font-weight:600;text-align:right;padding-right:10px;font-size:11px;}
+table.cm td.cell{width:46px;height:38px;text-align:center;border-radius:4px;color:#1c2b36;font-variant-numeric:tabular-nums;}
+.cm-cap{font-size:11px;color:var(--text-secondary);margin-top:8px;}
+
+.table-section{background:var(--bg-card);border-radius:var(--radius);padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;}
+.table-section h3{font-size:14px;font-weight:650;margin-bottom:14px;}
+table.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table thead th{text-align:left;padding:10px 12px;border-bottom:2px solid #dee2e6;color:var(--text-secondary);
+  font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;user-select:none;white-space:nowrap;}
+.data-table thead th:hover{color:var(--text-primary);background:#f6f8fa;}
+.data-table tbody td{padding:10px 12px;border-bottom:1px solid #f0f0f0;font-variant-numeric:tabular-nums;}
+.data-table tbody tr:hover{background:#f8fafb;}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:7px;vertical-align:middle;}
+.bar-mini{height:7px;border-radius:4px;background:var(--accent);display:inline-block;vertical-align:middle;}
+.flag{font-size:11px;padding:2px 7px;border-radius:10px;background:#fdecea;color:var(--warn);font-weight:600;}
+
+.dashboard-footer{margin-top:var(--gap);text-align:center;color:var(--text-secondary);font-size:12px;line-height:1.7;}
+@media(max-width:768px){.chart-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}}
+@media print{body{background:#fff;}.filters{display:none;}.chart-container,.kpi-card{box-shadow:none;border:1px solid #e0e0e0;}}
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+
+  <header class="dashboard-header">
+    <div>
+      <h1>🌱 Supportive Emotion &amp; Distress Text Classifier</h1>
+      <div class="sub">Model performance dashboard · TF–IDF + Logistic Regression · dair-ai/emotion (held-out test, 2,000 rows)</div>
+    </div>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="metricSel">Per-class metric</label>
+        <select id="metricSel" onchange="dash.update()">
+          <option value="f1">F1 score</option>
+          <option value="precision">Precision</option>
+          <option value="recall">Recall</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="splitSel">Distribution split</label>
+        <select id="splitSel" onchange="dash.update()">
+          <option value="trainCount">Training set</option>
+          <option value="testCount">Test set</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+    <b>⚠ Non-clinical scope:</b> This system classifies the <i>tone</i> of text and does
+    <b>not</b> diagnose mental-health conditions. The urgent-distress signal is a separate,
+    high-recall safety layer that surfaces crisis resources — it is a safety net, not a guarantee.
+  </div>
+
+  <section class="kpi-row">
+    <div class="kpi-card good">
+      <div class="kpi-label">Held-out Macro-F1</div>
+      <div class="kpi-value">0.866</div>
+      <div class="kpi-sub">equal weight per tone · 2,000 unseen msgs</div>
+    </div>
+    <div class="kpi-card good">
+      <div class="kpi-label">Accuracy</div>
+      <div class="kpi-value">0.91</div>
+      <div class="kpi-sub">CV macro-F1 during training: 0.879</div>
+    </div>
+    <div class="kpi-card safety">
+      <div class="kpi-label">Distress-layer Recall</div>
+      <div class="kpi-value">1.00</div>
+      <div class="kpi-sub">probe set · 0 false negatives</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Labelled Data</div>
+      <div class="kpi-value">9,432</div>
+      <div class="kpi-sub">train rows · 6 tones · capped 2,500/class</div>
+    </div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container">
+      <h3 id="perClassTitle">Per-class F1 (held-out test)</h3>
+      <div class="hint">Switch the metric in the header. Bars are coloured per tone.</div>
+      <canvas id="perClassChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Model comparison</h3>
+      <div class="hint">5-fold CV macro-F1. SVM scores highest but has no probability output — LogReg was chosen for confidence scores.</div>
+      <canvas id="modelChart"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container">
+      <h3 id="distTitle">Class distribution — Training set</h3>
+      <div class="hint">Toggle train/test in the header. <i>stress</i> &amp; <i>loneliness</i> are keyword-derived and data-starved.</div>
+      <canvas id="distChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Confusion matrix (held-out test)</h3>
+      <div class="hint">Rows = true tone, columns = predicted. Cell shade is relative to each row's total.</div>
+      <div class="cm-wrap"><div id="cmTable"></div></div>
+      <div class="cm-cap">Diagonal = correct. Sensible blur: sadness↔neutral/anger, neutral↔anxiety/sadness.</div>
+    </div>
+  </section>
+
+  <section class="table-section">
+    <h3>Per-class metrics — click a header to sort</h3>
+    <div id="metricsTable"></div>
+  </section>
+
+  <footer class="dashboard-footer">
+    <div>Self-contained dashboard · regenerate metrics with <code>python -m src.evaluate</code></div>
+    <div>Reflection aid for educational/portfolio use — <b>not</b> a clinical or crisis tool. Crisis resources must be verified &amp; localised before real use.</div>
+  </footer>
+</div>
+
+<script>
+// ---- Embedded project data (from src/evaluate.py on the held-out test split) ----
+const TONES = ["anger","anxiety","loneliness","neutral","sadness","stress"];
+const COLOR = {anger:"#c44e52",anxiety:"#8172b3",loneliness:"#937860",neutral:"#7f8c9b",sadness:"#4c72b0",stress:"#dd8452"};
+const CLASS_METRICS = {
+  anger:     {precision:0.85,recall:0.88,f1:0.87,support:275,trainCount:2159,testCount:275},
+  anxiety:   {precision:0.83,recall:0.90,f1:0.86,support:202,trainCount:1811,testCount:202},
+  loneliness:{precision:0.79,recall:0.90,f1:0.84,support:30, trainCount:229, testCount:30},
+  neutral:   {precision:0.95,recall:0.93,f1:0.94,support:907,trainCount:2500,testCount:907},
+  sadness:   {precision:0.93,recall:0.89,f1:0.91,support:551,trainCount:2500,testCount:551},
+  stress:    {precision:0.69,recall:0.89,f1:0.78,support:35, trainCount:233, testCount:35},
+};
+const MODELS = [{name:"Linear SVM",f1:0.902,note:"no predict_proba"},
+                {name:"Logistic Regression",f1:0.879,note:"chosen"},
+                {name:"Naive Bayes",f1:0.588,note:"baseline"}];
+// Confusion matrix rows/cols in TONES order
+const CM = {
+  anger:     [243,6,3,11,11,1],
+  anxiety:   [6,182,2,5,6,1],
+  loneliness:[0,1,27,0,2,0],
+  neutral:   [14,21,2,843,20,7],
+  sadness:   [22,10,0,25,489,5],
+  stress:    [0,0,0,4,0,31],
+};
+
+class Dashboard{
+  constructor(){this.charts={};this.buildCharts();this.buildCM();this.buildTable();}
+  metricLabel(){return {f1:"F1",precision:"Precision",recall:"Recall"}[document.getElementById('metricSel').value];}
+
+  buildCharts(){
+    const m=document.getElementById('metricSel').value;
+    this.charts.perClass=new Chart(document.getElementById('perClassChart'),{
+      type:'bar',
+      data:{labels:TONES,datasets:[{data:TONES.map(t=>CLASS_METRICS[t][m]),
+        backgroundColor:TONES.map(t=>COLOR[t]+'cc'),borderColor:TONES.map(t=>COLOR[t]),borderWidth:1,borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true,max:1,ticks:{callback:v=>v.toFixed(1)}}}}
+    });
+    this.charts.model=new Chart(document.getElementById('modelChart'),{
+      type:'bar',
+      data:{labels:MODELS.map(d=>d.name),datasets:[{data:MODELS.map(d=>d.f1),
+        backgroundColor:MODELS.map(d=>d.note==='chosen'?'#28a745cc':'#2f6f8fcc'),
+        borderColor:MODELS.map(d=>d.note==='chosen'?'#28a745':'#2f6f8f'),borderWidth:1,borderRadius:5}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+        tooltip:{callbacks:{afterLabel:c=>MODELS[c.dataIndex].note}}},
+        scales:{x:{beginAtZero:true,max:1,ticks:{callback:v=>v.toFixed(1)}}}}
+    });
+    const split=document.getElementById('splitSel').value;
+    this.charts.dist=new Chart(document.getElementById('distChart'),{
+      type:'doughnut',
+      data:{labels:TONES,datasets:[{data:TONES.map(t=>CLASS_METRICS[t][split]),
+        backgroundColor:TONES.map(t=>COLOR[t]+'cc'),borderColor:'#fff',borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+        plugins:{legend:{position:'right',labels:{usePointStyle:true,padding:12,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);
+          return `${c.label}: ${c.parsed.toLocaleString()} (${(c.parsed/tot*100).toFixed(1)}%)`;}}}}}
+    });
+  }
+
+  buildCM(){
+    let h='<table class="cm"><thead><tr><th></th>';
+    TONES.forEach(t=>h+=`<th class="rot">${t}</th>`);
+    h+='</tr></thead><tbody>';
+    TONES.forEach(tr=>{
+      const row=CM[tr],max=Math.max(...row);
+      let cells='';
+      row.forEach((v,j)=>{
+        const isDiag=TONES[j]===tr, intensity=max?v/max:0;
+        const base=isDiag?'47,111,143':'178,58,46';
+        const alpha=(0.08+intensity*0.80).toFixed(2);
+        const txt=intensity>0.55?'#fff':'#1c2b36';
+        cells+=`<td class="cell" style="background:rgba(${base},${alpha});color:${txt}" title="true ${tr} → pred ${TONES[j]}: ${v}">${v}</td>`;
+      });
+      h+=`<tr><td class="lbl">${tr}</td>${cells}</tr>`;
+    });
+    h+='</tbody></table>';
+    document.getElementById('cmTable').innerHTML=h;
+  }
+
+  buildTable(){
+    const cols=[{f:'tone',l:'Tone'},{f:'precision',l:'Precision'},{f:'recall',l:'Recall'},
+      {f:'f1',l:'F1'},{f:'support',l:'Support'},{f:'flag',l:'Note'}];
+    const rows=TONES.map(t=>({tone:t,...CLASS_METRICS[t],
+      flag:CLASS_METRICS[t].support<50?'data-starved':''}));
+    let sortF='f1',sortD='desc';
+    const fmt=(r,f)=>{
+      if(f==='tone')return `<span class="swatch" style="background:${COLOR[r.tone]}"></span>${r.tone}`;
+      if(f==='flag')return r.flag?`<span class="flag">${r.flag}</span>`:'';
+      if(f==='support')return r.support.toLocaleString();
+      if(['precision','recall','f1'].includes(f))
+        return `${r[f].toFixed(2)} <span class="bar-mini" style="width:${r[f]*46}px;background:${COLOR[r.tone]}"></span>`;
+      return r[f];
+    };
+    const render=()=>{
+      const sorted=[...rows].sort((a,b)=>{const x=a[sortF],y=b[sortF];
+        const c=x<y?-1:x>y?1:0;return sortD==='asc'?c:-c;});
+      let h='<table class="data-table"><thead><tr>';
+      cols.forEach(c=>{const ar=sortF===c.f?(sortD==='asc'?' ▲':' ▼'):'';
+        h+=`<th data-f="${c.f}">${c.l}${ar}</th>`;});
+      h+='</tr></thead><tbody>';
+      sorted.forEach(r=>{h+='<tr>';cols.forEach(c=>h+=`<td>${fmt(r,c.f)}</td>`);h+='</tr>';});
+      h+='</tbody></table>';
+      const cont=document.getElementById('metricsTable');cont.innerHTML=h;
+      cont.querySelectorAll('th').forEach(th=>th.onclick=()=>{
+        const f=th.dataset.f;if(sortF===f)sortD=sortD==='asc'?'desc':'asc';else{sortF=f;sortD='desc';}render();});
+    };
+    render();
+  }
+
+  update(){
+    const m=document.getElementById('metricSel').value;
+    this.charts.perClass.data.datasets[0].data=TONES.map(t=>CLASS_METRICS[t][m]);
+    this.charts.perClass.update('none');
+    document.getElementById('perClassTitle').textContent=`Per-class ${this.metricLabel()} (held-out test)`;
+    const split=document.getElementById('splitSel').value;
+    this.charts.dist.data.datasets[0].data=TONES.map(t=>CLASS_METRICS[t][split]);
+    this.charts.dist.update('none');
+    document.getElementById('distTitle').textContent=
+      `Class distribution — ${split==='trainCount'?'Training set':'Test set'}`;
+  }
+}
+const dash=new Dashboard();
+</script>
+</body>
+</html>
