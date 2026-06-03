@@ -64,6 +64,23 @@ needed). KPI cards, a per-class metric chart, model comparison, class distributi
 and a confusion-matrix heatmap. A formatted report is also available as
 [`reports/report.tex`](reports/report.tex) (LaTeX → PDF).
 
+## 🔬 Datasets Evaluated
+
+I tested **GoEmotions** (Google, ~43k Reddit comments) as a richer alternative to
+dair-ai/emotion. Despite being larger, held-out **macro-F1 dropped from 0.866 to
+0.409** — every tone got worse.
+
+![dair-ai vs GoEmotions](reports/dataset_comparison.png)
+
+**Why:** GoEmotions is noisy, context-dependent Reddit text (sarcasm, slang), and
+collapsing its 18 positive/ambiguous emotions into `neutral` made that class ~80% of
+the test set. A bag-of-words model (TF–IDF) rewards clean, self-contained text, so
+dataset *fit* mattered more than size. The takeaway: GoEmotions would need
+context-aware **sentence embeddings**, not a worse dataset — a clean motivation for
+the v2 upgrade. Full analysis in
+[`notebooks/02_dataset_comparison.ipynb`](notebooks/02_dataset_comparison.ipynb);
+the GoEmotions loader is preserved at `src/download_goemotions.py`.
+
 ## 🗂️ Project Structure
 
 ```
