@@ -53,9 +53,14 @@ streamlit run app/streamlit_app.py
 
 ## 📊 Results & Evaluation
 
-Report **macro-F1** (equal weight per emotion), per-class precision/recall, a
-confusion matrix, and — separately — the **recall** of the distress layer. See
-`reports/metrics.md`.
+Held-out test (dair-ai/emotion, 2,000 unseen rows): **macro-F1 0.866**, accuracy
+**0.91**, and distress-layer recall **1.00** (reported separately). Full per-class
+precision/recall and the confusion matrix are in [`reports/metrics.md`](reports/metrics.md).
+
+**📈 Interactive dashboard:** open [`dashboard.html`](dashboard.html) in any browser
+(self-contained, no server needed) for KPI cards, a per-class metric chart, model
+comparison, class distribution, and a confusion-matrix heatmap. A formatted report
+is also available as [`reports/report.tex`](reports/report.tex) (LaTeX → PDF).
 
 ## 🗂️ Project Structure
 
@@ -67,8 +72,12 @@ src/predict.py       combine emotion model + distress layer
 src/distress.py      SAFETY layer (rule-based, high-recall)
 src/responses.py     non-clinical supportive messages
 src/storage.py       anonymized local logging + trends
+src/download_data.py download + remap dair-ai/emotion dataset
+src/evaluate.py      held-out evaluation + confusion matrix
 app/streamlit_app.py single-screen UI
 tests/               distress-layer tests
+dashboard.html       self-contained interactive results dashboard
+reports/             metrics.md, report.tex, confusion_matrix.png
 ```
 
 ## ⚖️ Ethical Design & Limitations
